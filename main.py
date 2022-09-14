@@ -1,5 +1,7 @@
+from curses import meta
 import os
 import subprocess
+from sys import meta_path
 from zipfile import ZipFile
 import shutil
 from androguard.misc import AnalyzeDex
@@ -102,7 +104,7 @@ class LibMetadata:
         for repo in self.repos:
             if repo.name == repo_name:
                 return repo
-                
+
 """
 Baslangic dosya formati:
 
@@ -152,13 +154,10 @@ def extractJARfilesFromZIP():
 # extractJARfilesFromZIP()
 
 
-def convertJARtoDEX():
-    for root, directories, files in os.walk(lib_path):
-        for file in files:
-            if file.endswith('.jar'):
-                pre, ext = os.path.splitext(file)
-                subprocess.call([f"{dex_path}d2j-jar2dex.bat", f"{root}/{file}", "-o", f"{root}/{pre}.dex"])
-
+def convertJARtoDEX(file):
+    if file.endswith('.jar'):
+        result = subprocess.call(["./dex-tools/d2j-jar2dex.sh", file, "-o", file[:-4] + ".dex"])
+    return file[:-4] + ".dex"
 
 # convertJARtoDEX()
 
@@ -197,6 +196,52 @@ def read_metadata_files():
             metadata_path_list.append(root+"/"+file)
     return metadata_path_list
 
+metadata_paths = read_metadata_files()
+
+def read_metadata_json(lib_path):
+    file = open(lib_path,mode ="r" )
+    data = json.loads(file.read())
+    return LibMetadata(data)
+
+def get_lib_paths(metadata_paths):
+    lib_paths = []
+    for item_metadata_path in metadata_paths:
+        metadata = read_metadata_json(item_metadata_path)
+        for item_repo in metadata.repos:
+            for item_version in item_repo.versions:
+                if(item_version.downloaded == True):
+                    lib_paths.append(metadata.id + "/" + item_version.version + "." +item_version.filetype)
+    return lib_paths
+
+lib_paths = get_lib_paths(metadata_paths)
+
+
+dex_paths = []
+for item_lib_path in lib_paths:
+    item_lib_path = "./libs/"+item_lib_path
+    file_exists = os.path.isfile(item_lib_path[:-4] + ".dex")
+    if(file_exists):
+        dex_paths.append(item_lib_path[:-4] + ".dex")
+        continue
+    if item_lib_path[-3:] == "aar":
+            pre, ext = os.path.splitext(item_lib_path)
+            # copying existing aar
+            shutil.copyfile(item_lib_path, item_lib_path[:-4] + "-copy.aar")
+            # converting copied .aar to .zip to extract 'classes.jar' inside of it
+            os.rename( item_lib_path[:-4] + "-copy.aar", item_lib_path[:-4] + ".zip")
+            with ZipFile(item_lib_path[:-4] + ".zip", 'r') as zipObj:
+                listOfiles = zipObj.namelist()
+                for element in listOfiles:
+                    if element == "classes.jar":
+                        zipObj.extract(element, "./")
+                        os.rename("./classes.jar", item_lib_path[:-4] + ".jar")
+                        dex_path =convertJARtoDEX(item_lib_path[:-4] + ".jar")
+                        dex_paths.append(dex_path)
+    elif item_lib_path[-3:] == "jar":
+        dex_path = convertJARtoDEX(item_lib_path)
+        dex_paths.append(dex_path)
+    
+print(dex_paths)
 file_exists = os.path.isfile(output_file)
 
 with open('output.csv', mode='a') as file:
