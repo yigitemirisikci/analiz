@@ -4,9 +4,12 @@ from zipfile import ZipFile
 import shutil
 from androguard.misc import AnalyzeDex
 import csv
+import os.path
 
 lib_path = "C:/Users/Yigit/Desktop/LIB ANALYSES/androguard/analiz/"
 dex_path = "C:/Users/Yigit/Desktop/LIB ANALYSES/androguard/dex/"
+output_file = "output.csv"
+headers = ['id', 'artifact_id', 'group_id','version', 'permissions']
 
 """
 Baslangic dosya formati:
@@ -95,8 +98,13 @@ def analyzeDEXfiles():
 
 analyzeDEXfiles()
 
-with open('employee_file.csv', mode='w') as employee_file:
-    employee_writer = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
-    employee_writer.writerow(['John Smith', 'Accounting', 'November'])
-    employee_writer.writerow(['Erica Meyers', 'IT', 'March'])
+
+file_exists = os.path.isfile(output_file)
+
+with open('output.csv', mode='a') as file:
+    writer = csv.DictWriter(file, delimiter=',', lineterminator='\n',fieldnames=headers)
+    if not file_exists:
+        writer.writeheader()  # file doesn't exist yet, write a header
+    writer.writerow({'id': "1", 'artifact_id': "12", 'group_id': "3","version": "123"})
+
