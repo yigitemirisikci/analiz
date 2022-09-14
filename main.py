@@ -5,6 +5,7 @@ import shutil
 from androguard.misc import AnalyzeDex
 import csv
 import os.path
+import json
 
 lib_path = "./libs"
 dex_path = "./dex_files"
@@ -97,7 +98,14 @@ def analyzeDEXfiles():
                     print(item3)
 
 
-analyzeDEXfiles()
+#analyzeDEXfiles()
+
+def read_metadata_files():
+    metadata_path_list = [] 
+    for root, _, files in os.walk(metadata_path):
+        for file in files:
+            metadata_path_list.append(root+"/"+file)
+    return metadata_path_list
 
 
 
