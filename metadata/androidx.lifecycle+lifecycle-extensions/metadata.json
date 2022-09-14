@@ -1,0 +1,182 @@
+{
+    "id": "androidx.lifecycle+lifecycle-extensions",
+    "artifact_id": "lifecycle-extensions",
+    "group_id": "androidx.lifecycle",
+    "tag": "browser extensions",
+    "repos": [
+        {
+            "name": "Google",
+            "base_url": "https://maven.google.com/",
+            "versions": [
+                {
+                    "version": "2.0.0",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.0.0-alpha1",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "aar",
+                    "downloaded": true,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.0.0-beta01",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "aar",
+                    "downloaded": true,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.0.0-rc01",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.1.0",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.1.0-alpha01",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.1.0-alpha02",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.1.0-alpha03",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.1.0-alpha04",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.1.0-beta01",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.1.0-rc01",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.2.0",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "aar",
+                    "downloaded": true,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.2.0-alpha01",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.2.0-alpha02",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.2.0-alpha03",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.2.0-alpha04",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.2.0-alpha05",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.2.0-beta01",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.2.0-rc01",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.2.0-rc02",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "",
+                    "downloaded": false,
+                    "applied_analyzes": []
+                },
+                {
+                    "version": "2.2.0-rc03",
+                    "usages": 275,
+                    "date": "Sep 22, 2018",
+                    "filetype": "aar",
+                    "downloaded": true,
+                    "applied_analyzes": []
+                }
+            ]
+        }
+    ]
+}

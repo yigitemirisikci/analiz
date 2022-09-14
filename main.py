@@ -6,9 +6,10 @@ from androguard.misc import AnalyzeDex
 import csv
 import os.path
 
-lib_path = "C:/Users/Yigit/Desktop/LIB ANALYSES/androguard/analiz/"
-dex_path = "C:/Users/Yigit/Desktop/LIB ANALYSES/androguard/dex/"
+lib_path = "./libs"
+dex_path = "./dex_files"
 output_file = "output.csv"
+metadata_path= "./metadata"
 headers = ['id', 'artifact_id', 'group_id','version', 'permissions']
 
 """
