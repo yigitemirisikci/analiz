@@ -16,6 +16,12 @@ output_file = "output.csv"
 metadata_path= "./metadata"
 headers = ['id', 'artifact_id', 'group_id','version', 'permissions']
 
+file_exists = os.path.isfile(output_file)
+file_output = open('output.csv', mode='a')
+writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
+if not file_exists:
+    writer.writeheader()  # file doesn't exist yet, write a header
+# writer.writerow({'id': "1", 'artifact_id': "12", 'group_id': "3","version": "123"})
 
 class Version:
     def __init__(self, d: dict = None) -> None:
@@ -120,37 +126,6 @@ Baslangic dosya formati:
     ...                                                             
         
 """
-
-
-def convertAARtoZIP():
-    for root, directories, files in os.walk(lib_path):
-        for file in files:
-            if file.endswith('.aar'):
-                pre, ext = os.path.splitext(file)
-                # copying existing aar
-                shutil.copyfile(f"{root}/{file}", f"{root}/{pre}-copied{ext}")
-                # converting copied .aar to .zip to extract 'classes.jar' inside of it
-                os.rename(f"{root}/{pre}-copied{ext}", f"{root}/{pre}.zip")
-
-
-# convertAARtoZIP()
-
-def extractJARfilesFromZIP():
-    for root, directories, files in os.walk(lib_path):
-        for file in files:
-
-            if file.endswith('.zip'):
-                pre, ext = os.path.splitext(file)
-
-                with ZipFile(f"{root}/{file}", 'r') as zipObj:
-                    listOfiles = zipObj.namelist()
-
-                    for element in listOfiles:
-                        if element == "classes.jar":
-                            zipObj.extract(element, root + "/")
-                            os.rename(f"{root}/classes.jar", f"{root}/{pre}.jar")
-
-
 # extractJARfilesFromZIP()
 
 
@@ -163,9 +138,12 @@ def convertJARtoDEX(file):
 
 def analyzeDEXfiles():
     for root, directories, files in os.walk(lib_path):
+        print(root)
         for file in files:
             if file.endswith('.dex'):
                 a, b, c = AnalyzeDex(filename=root + "/" + file)
+                for item in c.get_methods():
+                    print(item.full_name)
 
                 # dangerous permissions
                 for meth, perm in c.get_permissions():
@@ -242,11 +220,6 @@ for item_lib_path in lib_paths:
         dex_paths.append(dex_path)
     
 print(dex_paths)
-file_exists = os.path.isfile(output_file)
 
-with open('output.csv', mode='a') as file:
-    writer = csv.DictWriter(file, delimiter=',', lineterminator='\n',fieldnames=headers)
-    if not file_exists:
-        writer.writeheader()  # file doesn't exist yet, write a header
-    writer.writerow({'id': "1", 'artifact_id': "12", 'group_id': "3","version": "123"})
 
+analyzeDEXfiles()
