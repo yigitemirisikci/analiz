@@ -10,17 +10,31 @@ import os.path
 import json
 from typing import List
 
-lib_path = "./libs"
+lib_path = "/Users/betul/Desktop/libsec-scraper/updated-libs"
 dex_path = "./dex_files"
 output_file = "output.csv"
-metadata_path= "./metadata"
-headers = ['id', 'artifact_id', 'group_id','version', 'permissions']
+output_file_permission = "permission.csv"
+blacklist_file_path = "./blacklist.txt"
+metadata_path= "/Users/betul/Desktop/libsec-scraper/libdata"
 
+
+headers = ['id', 'artifact_id', 'group_id','version', 'permission', 'api', 'method']
 file_exists = os.path.isfile(output_file)
-file_output = open('output.csv', mode='a')
+file_output = open('output.csv', mode='a+')
+file_output.seek(0,0)
 writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
 if not file_exists:
-    writer.writeheader()  # file doesn't exist yet, write a header
+    writer.writeheader()
+
+
+file_blacklist = open(blacklist_file_path, mode='a+')
+file_blacklist.seek(0,0)
+
+blacklist = file_blacklist.readlines()
+blacklist = [s.strip() for s in blacklist]
+
+
+
 # writer.writerow({'id': "1", 'artifact_id': "12", 'group_id': "3","version": "123"})
 
 class Version:
@@ -130,39 +144,60 @@ Baslangic dosya formati:
 
 
 def convertJARtoDEX(file):
-    if file.endswith('.jar'):
+    if file.endswith('.jar') and not file in blacklist:
         result = subprocess.call(["./dex-tools/d2j-jar2dex.sh", file, "-o", file[:-4] + ".dex"])
+        file_exists = os.path.isfile(file[:-4] + ".dex")
+        if file_exists == False: 
+            file_blacklist.write(file + "\n")
+            file_blacklist.flush()
     return file[:-4] + ".dex"
 
 # convertJARtoDEX()
 
 def analyzeDEXfiles():
     for root, directories, files in os.walk(lib_path):
-        print(root)
+    
         for file in files:
+      
             if file.endswith('.dex'):
+          
                 a, b, c = AnalyzeDex(filename=root + "/" + file)
-                for item in c.get_methods():
-                    print(item.full_name)
+                # for item in c.get_methods():
+                #     print(item.full_name)
 
+# Using API method <analysis.MethodAnalysis Landroid/bluetooth/BluetoothAdapter;->getProfileConnectionState(I)I> for permission ['android.permission.BLUETOOTH']
+# used in:
+# Lcom/journeyOS/i007Service/core/detect/HeadSetMonitor$HeadSetPlugBroadcastReceiver; onReceive (Landroid/content/Context; Landroid/content/Intent;)V
+# Lcom/journeyOS/i007Service/core/detect/HeadSetMonitor; onStart ()V
                 # dangerous permissions
+             
+
+                path = root + "/" + file
+                path = path.replace("/" , "+")
+                splited_path = path.split("+")
+                splited_path = splited_path[-3:]
+                
+
                 for meth, perm in c.get_permissions():
-                    print("Using API method {} for permission {}".format(meth, perm))
-                    print("used in:")
+                    #print("Using API method {} for permission {}".format(meth, perm))
+                    #print("used in:")
+                    meth_list = []
                     for _, m, _ in meth.get_xref_from():
-                        print(f"{m.full_name}")
+                        meth_list.append(m.full_name)
+                       # print(f"{m.full_name}")
+                    writer.writerow({'id': splited_path[0] + "+" + splited_path[1] , 'artifact_id': splited_path[0], 'group_id': splited_path[1],"version": splited_path[2][:-4], 'permission': perm, 'api': meth.full_name, 'method': meth_list})
 
-                # class loading
-                for item1 in c.find_methods(methodname="loadClass()"):
-                    print(item1)
+                # # class loading
+                # for item1 in c.find_methods(methodname="start()"):
+                #     print(item1)
 
-                # package manager
-                for item2 in c.find_classes("Landroid/content/pm/PackageManager"):
-                    print(item2)
+                # # package manager
+                # for item2 in c.find_classes("Landroid/content/pm/PackageManager"):
+                #     print(item2)
 
-                # javascript
-                for item3 in c.find_methods(methodname="evaluateJavascript()"):
-                    print(item3)
+                # # javascript
+                # for item3 in c.find_methods(methodname="evaluateJavascript()"):
+                #     print(item3)
 
 
 #analyzeDEXfiles()
@@ -193,10 +228,12 @@ def get_lib_paths(metadata_paths):
 
 lib_paths = get_lib_paths(metadata_paths)
 
-
 dex_paths = []
 for item_lib_path in lib_paths:
-    item_lib_path = "./libs/"+item_lib_path
+    file_exists2 = os.path.isfile(item_lib_path[:-4] + ".aar")  or os.path.isfile(item_lib_path[:-4] + ".jar")
+    if(file_exists2):
+        continue
+    item_lib_path = lib_path+"/"+item_lib_path
     file_exists = os.path.isfile(item_lib_path[:-4] + ".dex")
     if(file_exists):
         dex_paths.append(item_lib_path[:-4] + ".dex")
@@ -219,7 +256,7 @@ for item_lib_path in lib_paths:
         dex_path = convertJARtoDEX(item_lib_path)
         dex_paths.append(dex_path)
     
-print(dex_paths)
+
 
 
 analyzeDEXfiles()
