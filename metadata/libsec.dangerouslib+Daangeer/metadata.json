@@ -1,0 +1,22 @@
+{
+    "id": "libsec.dangerouslib+Daangeer",
+    "artifact_id": "Daangeer",
+    "group_id": "libsec.dangerouslib",
+    "tag": "notification",
+    "repos": [
+        {
+            "name": "Gradle Releases",
+            "base_url": "https://repo.gradle.org/gradle/libs-releases/",
+            "versions": [
+                {
+                    "version": "1.0.0",
+                    "usages": 0,
+                    "date": "Jun 21, 2018",
+                    "filetype": "aar",
+                    "downloaded": true,
+                    "applied_analyzes": []
+                }
+            ]
+        }
+    ]
+}

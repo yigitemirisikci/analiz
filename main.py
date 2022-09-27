@@ -1,129 +1,44 @@
-from curses import meta
 import os
 import subprocess
-from sys import meta_path
+from typing import Tuple
 from zipfile import ZipFile
 import shutil
 from androguard.misc import AnalyzeDex
+from androguard.core.analysis.analysis import Analysis
 import csv
 import os.path
 import json
-from typing import List
+from libmetadata import LibMetadata
+from javascriptresult import JavascriptResult
 
-lib_path = "/Users/betul/Desktop/libsec-scraper/updated-libs"
+lib_path = "./libs"
 dex_path = "./dex_files"
 output_file = "output.csv"
 output_file_permission = "permission.csv"
 blacklist_file_path = "./blacklist.txt"
-metadata_path= "/Users/betul/Desktop/libsec-scraper/libdata"
+metadata_path = "./metadata"
 
 
-headers = ['id', 'artifact_id', 'group_id','version', 'permission', 'api', 'method']
+headers = ['id', 'artifact_id', 'group_id',
+           'version', 'permission', 'api', 'method']
 file_exists = os.path.isfile(output_file)
 file_output = open('output.csv', mode='a+')
-file_output.seek(0,0)
-writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
+file_output.seek(0, 0)
+writer = csv.DictWriter(file_output, delimiter=',',
+                        lineterminator='\n', fieldnames=headers)
 if not file_exists:
     writer.writeheader()
 
 
 file_blacklist = open(blacklist_file_path, mode='a+')
-file_blacklist.seek(0,0)
+file_blacklist.seek(0, 0)
 
 blacklist = file_blacklist.readlines()
 blacklist = [s.strip() for s in blacklist]
 
 
-
 # writer.writerow({'id': "1", 'artifact_id': "12", 'group_id': "3","version": "123"})
 
-class Version:
-    def __init__(self, d: dict = None) -> None:
-        self.version = ""
-        self.usages = 0
-        self.date = "not found"
-        self.filetype = ""  # <aar|jar>
-        self.downloaded = False
-        self.applied_analyzes: List[str] = []
-
-        if d is not None:
-            for key, value in d.items():
-                setattr(self, key, value)
-
-    def __eq__(self, __o: object) -> bool:
-        return isinstance(__o, Version) and self.version == __o.version
-
-    def __ne__(self, __o: object) -> bool:
-        return not self.__eq__(__o)
-
-    def __hash__(self) -> int:
-        return hash(self.version)
-
-
-class Repo:
-    def __init__(self, d: dict = None) -> None:
-        self.name = ""
-        self.base_url = ""
-        self.versions: List[Version] = []
-
-        if d is not None:
-            for key, value in d.items():
-                if key == "versions":
-                    setattr(self, key, [Version(x) for x in value])
-                else:
-                    setattr(self, key, value)
-
-    def __eq__(self, __o: object) -> bool:
-        return isinstance(__o, Repo) and self.base_url == __o.base_url
-
-    def __ne__(self, __o: object) -> bool:
-        return not self.__eq__(__o)
-
-    def __hash__(self) -> int:
-        return hash(self.base_url)
-
-    def serialize(self) -> dict:
-        return dict(name=self.name, base_url=self.base_url,
-                    versions=[vars(v) for v in self.versions])
-
-    def get_version(self, version: str) -> Version:
-        for v in self.versions:
-            if v.version == version:
-                return v
-
-
-class LibMetadata:
-    def __init__(self, d: dict = None) -> None:
-        self.id = ""
-        self.artifact_id = ""
-        self.group_id = ""
-        self.tag = ""
-        self.repos: List[Repo] = []
-
-        if d is not None:
-            for key, value in d.items():
-                if key == "repos":
-                    setattr(self, key, [Repo(x) for x in value])
-                else:
-                    setattr(self, key, value)
-
-    def __eq__(self, __o: object) -> bool:
-        return isinstance(__o, LibMetadata) and self.id == __o.id
-
-    def __ne__(self, __o: object) -> bool:
-        return not self.__eq__(__o)
-
-    def __hash__(self) -> int:
-        return hash(self.id)
-
-    def serialize(self) -> dict:
-        return dict(id=self.id, artifact_id=self.artifact_id, group_id=self.group_id,
-                    tag=self.tag, repos=[r.serialize() for r in self.repos])
-
-    def get_repo(self, repo_name: str) -> Repo:
-        for repo in self.repos:
-            if repo.name == repo_name:
-                return repo
 
 """
 Baslangic dosya formati:
@@ -143,25 +58,60 @@ Baslangic dosya formati:
 # extractJARfilesFromZIP()
 
 
+def check_classloader(analysis: Analysis) -> bool:
+    return bool(list(analysis.find_methods(classname="Ldalvik/system/DexClassLoader;", methodname="loadClass()"))) or\
+        bool(list(analysis.find_methods(classname="Ldalvik/system/PathClassLoader;", methodname="loadClass()"))) or\
+        bool(list(analysis.find_methods(classname="Ljava/net/URLClassLoader;", methodname="loadClass()"))) or\
+        bool(list(analysis.find_methods(classname="Ldalvik/system/DelegateLastClassLoader;", methodname="loadClass()"))) or\
+        bool(list(analysis.find_methods(
+            classname="Ldalvik/system/InMemoryDexClassLoader;", methodname="loadClass()")))
+
+
+def check_javascript(analysis: Analysis) -> JavascriptResult:
+    return JavascriptResult(
+        addJavascriptInterface=bool(list(analysis.find_methods(
+            classname="Landroid.webkit.WebView;", methodname="addJavascriptInterface"))),
+        setJavaScriptEnabled=bool(list(analysis.find_methods(
+            classname="Landroid.webkit.WebSettings;", methodname="setJavaScriptEnabled"))),
+        evaluateJavascript=bool(list(analysis.find_methods(
+            classname="Landroid.webkit.WebView;", methodname="evaluateJavascript")))
+    )
+
+
+def check_reflection(analysis: Analysis) -> bool:
+    return bool(list(analysis.find_classes("Ljava/lang/reflect/.*;"))) or \
+        bool(list(analysis.find_classes("Lkotlin/reflect/.*;")))
+
+
+def check_installed_packages(analysis: Analysis) -> bool:
+    return bool(list(analysis.find_methods("Landroid/content/pm/PackageManager;", "getInstallSourceInfo"))) or \
+        bool(list(analysis.find_methods("Landroid/content/pm/PackageManager;", "getInstalledApplications"))) or \
+        bool(list(analysis.find_methods("Landroid/content/pm/PackageManager;", "getInstalledPackages"))) or \
+        bool(list(analysis.find_methods("Landroid/content/pm/PackageManager;", "getPackageInfo"))) or \
+        bool(list(analysis.find_methods("Landroid/content/pm/PackageManager;", "getApplicationInfo")))
+
+
 def convertJARtoDEX(file):
     if file.endswith('.jar') and not file in blacklist:
-        result = subprocess.call(["./dex-tools/d2j-jar2dex.sh", file, "-o", file[:-4] + ".dex"])
+        result = subprocess.call(
+            ["./dex-tools/d2j-jar2dex.sh", file, "-o", file[:-4] + ".dex"])
         file_exists = os.path.isfile(file[:-4] + ".dex")
-        if file_exists == False: 
+        if file_exists == False:
             file_blacklist.write(file + "\n")
             file_blacklist.flush()
     return file[:-4] + ".dex"
 
 # convertJARtoDEX()
 
+
 def analyzeDEXfiles():
     for root, directories, files in os.walk(lib_path):
-    
+
         for file in files:
-      
+
             if file.endswith('.dex'):
-          
-                a, b, c = AnalyzeDex(filename=root + "/" + file)
+
+                a, b, analysis: Tuple[_, _, Analysis] = AnalyzeDex(filename=root + "/" + file)
                 # for item in c.get_methods():
                 #     print(item.full_name)
 
@@ -170,22 +120,28 @@ def analyzeDEXfiles():
 # Lcom/journeyOS/i007Service/core/detect/HeadSetMonitor$HeadSetPlugBroadcastReceiver; onReceive (Landroid/content/Context; Landroid/content/Intent;)V
 # Lcom/journeyOS/i007Service/core/detect/HeadSetMonitor; onStart ()V
                 # dangerous permissions
-             
 
                 path = root + "/" + file
-                path = path.replace("/" , "+")
+                path = path.replace("/", "+")
                 splited_path = path.split("+")
                 splited_path = splited_path[-3:]
-                
 
-                for meth, perm in c.get_permissions():
+
+                uses_classloader = check_classloader(analysis)
+                javascript_result = check_javascript(analysis)
+                uses_reflection = check_reflection(analysis)
+                uses_pm = check_installed_packages(analysis)
+
+
+                for meth, perm in analysis.get_permissions():
                     #print("Using API method {} for permission {}".format(meth, perm))
                     #print("used in:")
                     meth_list = []
                     for _, m, _ in meth.get_xref_from():
                         meth_list.append(m.full_name)
                        # print(f"{m.full_name}")
-                    writer.writerow({'id': splited_path[0] + "+" + splited_path[1] , 'artifact_id': splited_path[0], 'group_id': splited_path[1],"version": splited_path[2][:-4], 'permission': perm, 'api': meth.full_name, 'method': meth_list})
+                    writer.writerow({'id': splited_path[0] + "+" + splited_path[1], 'artifact_id': splited_path[0], 'group_id': splited_path[1],
+                                    "version": splited_path[2][:-4], 'permission': perm, 'api': meth.full_name, 'method': meth_list})
 
                 # # class loading
                 # for item1 in c.find_methods(methodname="start()"):
@@ -200,21 +156,24 @@ def analyzeDEXfiles():
                 #     print(item3)
 
 
-#analyzeDEXfiles()
+# analyzeDEXfiles()
 
 def read_metadata_files():
-    metadata_path_list = [] 
+    metadata_path_list = []
     for root, _, files in os.walk(metadata_path):
         for file in files:
             metadata_path_list.append(root+"/"+file)
     return metadata_path_list
 
+
 metadata_paths = read_metadata_files()
 
+
 def read_metadata_json(lib_path):
-    file = open(lib_path,mode ="r" )
+    file = open(lib_path, mode="r")
     data = json.loads(file.read())
     return LibMetadata(data)
+
 
 def get_lib_paths(metadata_paths):
     lib_paths = []
@@ -223,14 +182,17 @@ def get_lib_paths(metadata_paths):
         for item_repo in metadata.repos:
             for item_version in item_repo.versions:
                 if(item_version.downloaded == True):
-                    lib_paths.append(metadata.id + "/" + item_version.version + "." +item_version.filetype)
+                    lib_paths.append(
+                        metadata.id + "/" + item_version.version + "." + item_version.filetype)
     return lib_paths
+
 
 lib_paths = get_lib_paths(metadata_paths)
 
 dex_paths = []
 for item_lib_path in lib_paths:
-    file_exists2 = os.path.isfile(item_lib_path[:-4] + ".aar")  or os.path.isfile(item_lib_path[:-4] + ".jar")
+    file_exists2 = os.path.isfile(
+        item_lib_path[:-4] + ".aar") or os.path.isfile(item_lib_path[:-4] + ".jar")
     if(file_exists2):
         continue
     item_lib_path = lib_path+"/"+item_lib_path
@@ -239,24 +201,23 @@ for item_lib_path in lib_paths:
         dex_paths.append(item_lib_path[:-4] + ".dex")
         continue
     if item_lib_path[-3:] == "aar":
-            pre, ext = os.path.splitext(item_lib_path)
-            # copying existing aar
-            shutil.copyfile(item_lib_path, item_lib_path[:-4] + "-copy.aar")
-            # converting copied .aar to .zip to extract 'classes.jar' inside of it
-            os.rename( item_lib_path[:-4] + "-copy.aar", item_lib_path[:-4] + ".zip")
-            with ZipFile(item_lib_path[:-4] + ".zip", 'r') as zipObj:
-                listOfiles = zipObj.namelist()
-                for element in listOfiles:
-                    if element == "classes.jar":
-                        zipObj.extract(element, "./")
-                        os.rename("./classes.jar", item_lib_path[:-4] + ".jar")
-                        dex_path =convertJARtoDEX(item_lib_path[:-4] + ".jar")
-                        dex_paths.append(dex_path)
+        pre, ext = os.path.splitext(item_lib_path)
+        # copying existing aar
+        shutil.copyfile(item_lib_path, item_lib_path[:-4] + "-copy.aar")
+        # converting copied .aar to .zip to extract 'classes.jar' inside of it
+        os.rename(item_lib_path[:-4] + "-copy.aar",
+                  item_lib_path[:-4] + ".zip")
+        with ZipFile(item_lib_path[:-4] + ".zip", 'r') as zipObj:
+            listOfiles = zipObj.namelist()
+            for element in listOfiles:
+                if element == "classes.jar":
+                    zipObj.extract(element, "./")
+                    os.rename("./classes.jar", item_lib_path[:-4] + ".jar")
+                    dex_path = convertJARtoDEX(item_lib_path[:-4] + ".jar")
+                    dex_paths.append(dex_path)
     elif item_lib_path[-3:] == "jar":
         dex_path = convertJARtoDEX(item_lib_path)
         dex_paths.append(dex_path)
-    
-
 
 
 analyzeDEXfiles()
