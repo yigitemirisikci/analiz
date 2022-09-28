@@ -1,3 +1,4 @@
+from cgitb import reset
 import os
 import subprocess
 from typing import Tuple
@@ -11,24 +12,66 @@ import json
 from libmetadata import LibMetadata
 from javascriptresult import JavascriptResult
 
-lib_path = "./libs"
+lib_path = "/Users/betul/Desktop/libsec-scraper/updated-libs"
 dex_path = "./dex_files"
-output_file = "output.csv"
-output_file_permission = "permission.csv"
 blacklist_file_path = "./blacklist.txt"
-metadata_path = "./metadata"
+metadata_path = "/Users/betul/Desktop/libsec-scraper/libdata"
 
 
 headers = ['id', 'artifact_id', 'group_id',
            'version', 'permission', 'api', 'method']
-file_exists = os.path.isfile(output_file)
-file_output = open('output.csv', mode='a+')
-file_output.seek(0, 0)
-writer = csv.DictWriter(file_output, delimiter=',',
+output_file_permission = "permission.csv"
+file_exists_permission = os.path.isfile(output_file_permission)
+file_output_permission = open(output_file_permission, mode='a+')
+file_output_permission.seek(0, 0)
+writer_permission = csv.DictWriter(file_output_permission, delimiter=',',
                         lineterminator='\n', fieldnames=headers)
-if not file_exists:
-    writer.writeheader()
+if not file_exists_permission:
+    writer_permission.writeheader()
 
+headers = ['id', 'artifact_id', 'group_id',
+           'version', 'signature', 'method']
+output_file_classloader = "classloader.csv"
+file_exists_classloader = os.path.isfile(output_file_classloader)
+file_output_classloader = open(output_file_classloader, mode='a+')
+file_output_classloader.seek(0, 0)
+writer_classloader = csv.DictWriter(file_output_classloader, delimiter=',',
+                        lineterminator='\n', fieldnames=headers)
+if not file_exists_classloader:
+    writer_classloader.writeheader()
+
+headers = ['id', 'artifact_id', 'group_id',
+           'version', 'signature', 'method']
+output_file_javascript = "javascript.csv"
+file_exists_javascript = os.path.isfile(output_file_javascript)
+file_output_javascript = open(output_file_javascript, mode='a+')
+file_output_javascript.seek(0, 0)
+writer_javascript = csv.DictWriter(file_output_javascript, delimiter=',',
+                        lineterminator='\n', fieldnames=headers)
+if not file_exists_javascript:
+    writer_javascript.writeheader()
+
+headers = ['id', 'artifact_id', 'group_id',
+           'version', 'signature', 'method']
+output_file_reflection = "reflection.csv"
+file_exists_reflection = os.path.isfile(output_file_reflection)
+file_output_reflection = open(output_file_reflection, mode='a+')
+file_output_reflection.seek(0, 0)
+writer_reflection = csv.DictWriter(file_output_reflection, delimiter=',',
+                        lineterminator='\n', fieldnames=headers)
+if not file_exists_reflection:
+    writer_reflection.writeheader()
+
+headers = ['id', 'artifact_id', 'group_id',
+           'version', 'signature', 'method']
+output_file_installed_packages = "installed_packages.csv"
+file_exists_installed_packages = os.path.isfile(output_file_installed_packages)
+file_output_installed_packages = open(output_file_installed_packages, mode='a+')
+file_output_installed_packages.seek(0, 0)
+writer_installed_packages = csv.DictWriter(file_output_installed_packages, delimiter=',',
+                        lineterminator='\n', fieldnames=headers)
+if not file_exists_installed_packages:
+    writer_installed_packages.writeheader()
 
 file_blacklist = open(blacklist_file_path, mode='a+')
 file_blacklist.seek(0, 0)
@@ -66,6 +109,9 @@ def check_classloader(analysis: Analysis) -> bool:
         bool(list(analysis.find_methods(
             classname="Ldalvik/system/InMemoryDexClassLoader;", methodname="loadClass()")))
 
+# com.example.start(){
+#     com.library.start()
+# }
 
 def check_javascript(analysis: Analysis) -> JavascriptResult:
     return JavascriptResult(
@@ -111,10 +157,42 @@ def analyzeDEXfiles():
 
             if file.endswith('.dex'):
 
-                a, b, analysis: Tuple[_, _, Analysis] = AnalyzeDex(filename=root + "/" + file)
+                analysis_results: Tuple[_, _, Analysis] = AnalyzeDex(filename=root + "/" + file)
+                a, b, analysis = analysis_results
                 # for item in c.get_methods():
                 #     print(item.full_name)
 
+                result = analysis.find_methods(
+                    classname="Landroid.webkit.WebSettings;", methodname="setJavaScriptEnabled")
+               
+                for item in result:
+                    meth_list = []
+                    for _, m, _ in item.get_xref_from():
+                        meth_list.append(m.full_name)
+                    writer_javascript.writerow({'id': splited_path[0] + "+" + splited_path[1], 'artifact_id': splited_path[0], 'group_id': splited_path[1],
+                                                    "version": splited_path[2][:-4], 'signature': "Landroid.webkit.WebSettings;->setJavaScriptEnabled", 'method': meth_list})
+                
+                
+                result = analysis.find_methods(
+                                    classname="Landroid.webkit.WebView;", methodname="addJavascriptInterface")
+            
+                for item in result:
+                    meth_list = []
+                    for _, m, _ in item.get_xref_from():
+                        meth_list.append(m.full_name)
+                    writer_javascript.writerow({'id': splited_path[0] + "+" + splited_path[1], 'artifact_id': splited_path[0], 'group_id': splited_path[1],
+                                    "version": splited_path[2][:-4], 'signature': "Landroid.webkit.WebView;->addJavascriptInterface", 'method': meth_list})
+               
+               
+                result = analysis.find_methods(
+                                    classname="Landroid.webkit.WebView;", methodname="evaluateJavascript")
+             
+                for item in result:
+                    meth_list = []
+                    for _, m, _ in item.get_xref_from():
+                        meth_list.append(m.full_name)
+                    writer_javascript.writerow({'id': splited_path[0] + "+" + splited_path[1], 'artifact_id': splited_path[0], 'group_id': splited_path[1],
+                                    "version": splited_path[2][:-4], 'signature': "Landroid.webkit.WebView;->addJavascriptInterface", 'method': meth_list})
 # Using API method <analysis.MethodAnalysis Landroid/bluetooth/BluetoothAdapter;->getProfileConnectionState(I)I> for permission ['android.permission.BLUETOOTH']
 # used in:
 # Lcom/journeyOS/i007Service/core/detect/HeadSetMonitor$HeadSetPlugBroadcastReceiver; onReceive (Landroid/content/Context; Landroid/content/Intent;)V
@@ -140,7 +218,7 @@ def analyzeDEXfiles():
                     for _, m, _ in meth.get_xref_from():
                         meth_list.append(m.full_name)
                        # print(f"{m.full_name}")
-                    writer.writerow({'id': splited_path[0] + "+" + splited_path[1], 'artifact_id': splited_path[0], 'group_id': splited_path[1],
+                    writer_permission.writerow({'id': splited_path[0] + "+" + splited_path[1], 'artifact_id': splited_path[0], 'group_id': splited_path[1],
                                     "version": splited_path[2][:-4], 'permission': perm, 'api': meth.full_name, 'method': meth_list})
 
                 # # class loading
@@ -185,6 +263,7 @@ def get_lib_paths(metadata_paths):
                     lib_paths.append(
                         metadata.id + "/" + item_version.version + "." + item_version.filetype)
     return lib_paths
+
 
 
 lib_paths = get_lib_paths(metadata_paths)
