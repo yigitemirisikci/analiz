@@ -1,1 +1,3 @@
 id,artifact_id,group_id,version,signature,method
+libsec.dangerouslib+Daangeer,libsec.dangerouslib,Daangeer,1.0.0,Ldalvik/system/DexClassLoader;->loadClass(),[Llibsec/dangerouslib/Daangeer; loadsomeclass (Ldalvik/system/DexClassLoader;)V]
+libsec.dangerouslib+Daangeer,libsec.dangerouslib,Daangeer,1.0.0,Ldalvik/system/DexClassLoader;->loadClass(),[Llibsec/dangerouslib/Daangeer; loadsomeclass (Ldalvik/system/DexClassLoader;)V]

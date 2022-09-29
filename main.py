@@ -130,6 +130,7 @@ def analyzeDEXfiles():
                     filename=root + "/" + file)
                 a, b, analysis = analysis_results
 
+                # Javascript
                 signature_jsenabled = MethodSignature(
                     "Landroid.webkit.WebSettings;", "setJavaScriptEnabled")
                 signature_jsinterface = MethodSignature(
@@ -145,6 +146,39 @@ def analyzeDEXfiles():
                 check_signature(analysis, signature_jseval,
                                 splitted_path, writer_javascript)
 
+                # Class loader
+                sign_cloader1 = MethodSignature("Ldalvik/system/DexClassLoader;", "loadClass()")
+                sign_cloader2 = MethodSignature("Ldalvik/system/PathClassLoader;", "loadClass()")
+                sign_cloader3 = MethodSignature("Ljava/net/URLClassLoader;", "loadClass()")
+                sign_cloader4 = MethodSignature("Ldalvik/system/DelegateLastClassLoader;", "loadClass()")
+                sign_cloader5 = MethodSignature("Ldalvik/system/InMemoryDexClassLoader;", "loadClass()")
+
+                check_signature(analysis, sign_cloader1, splitted_path, writer_classloader)
+                check_signature(analysis, sign_cloader2, splitted_path, writer_classloader)
+                check_signature(analysis, sign_cloader3, splitted_path, writer_classloader)
+                check_signature(analysis, sign_cloader4, splitted_path, writer_classloader)
+                check_signature(analysis, sign_cloader5, splitted_path, writer_classloader)
+
+                # Reflection
+                sign_ref1 = MethodSignature("Ljava/lang/reflect/", "")
+                sign_ref2 = MethodSignature("Lkotlin/reflect/", "")
+
+                check_signature(analysis, sign_ref1, splitted_path, writer_reflection)
+                check_signature(analysis, sign_ref2, splitted_path, writer_reflection)
+                
+                # Installed packages
+                sign_insp1 = MethodSignature("Landroid/content/pm/PackageManager;", "getInstallSourceInfo")
+                sign_insp2 = MethodSignature("Landroid/content/pm/PackageManager;", "getInstalledApplications")
+                sign_insp3 = MethodSignature("Landroid/content/pm/PackageManager;", "getInstalledPackages")
+                sign_insp4 = MethodSignature("Landroid/content/pm/PackageManager;", "getPackageInfo")
+                sign_insp5 = MethodSignature("Landroid/content/pm/PackageManager;", "getApplicationInfo")
+
+                check_signature(analysis, sign_insp1, splitted_path, writer_inspackages)
+                check_signature(analysis, sign_insp2, splitted_path, writer_inspackages)
+                check_signature(analysis, sign_insp3, splitted_path, writer_inspackages)
+                check_signature(analysis, sign_insp4, splitted_path, writer_inspackages)
+                check_signature(analysis, sign_insp5, splitted_path, writer_inspackages)
+
                 # dangerous permissions
                 check_permissions(analysis, splitted_path)
 
@@ -153,9 +187,6 @@ def analyzeDEXfiles():
                 javascript_result = check_javascript(analysis)
                 uses_reflection = check_reflection(analysis)
                 uses_pm = check_installed_packages(analysis)
-
-                print(path)
-                print(uses_classloader, *vars(javascript_result).values(), uses_reflection, uses_pm)
 
 
 def get_metadata_paths() -> List[str]:
