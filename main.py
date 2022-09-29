@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import List, Tuple
+from typing import Any, List, Tuple
 from zipfile import ZipFile
 import shutil
 from androguard.misc import AnalyzeDex
@@ -126,7 +126,7 @@ def analyzeDEXfiles():
                 splitted_path = path.split("+")
                 splitted_path = splitted_path[-3:]
 
-                analysis_results: Tuple[_, _, Analysis] = AnalyzeDex(
+                analysis_results: Tuple[Any, Any, Analysis] = AnalyzeDex(
                     filename=root + "/" + file)
                 a, b, analysis = analysis_results
 
@@ -153,7 +153,7 @@ def analyzeDEXfiles():
                 javascript_result = check_javascript(analysis)
                 uses_reflection = check_reflection(analysis)
                 uses_pm = check_installed_packages(analysis)
-                
+
                 print(path)
                 print(uses_classloader, *vars(javascript_result).values(), uses_reflection, uses_pm)
 
