@@ -232,24 +232,28 @@ for item_lib_path in lib_paths:
     if(file_exists):
         dex_paths.append(item_lib_path[:-4] + ".dex")
         continue
-    if item_lib_path[-3:] == "aar":
-        pre, ext = os.path.splitext(item_lib_path)
-        # copying existing aar
-        shutil.copyfile(item_lib_path, item_lib_path[:-4] + "-copy.aar")
-        # converting copied .aar to .zip to extract 'classes.jar' inside of it
-        os.rename(item_lib_path[:-4] + "-copy.aar",
-                  item_lib_path[:-4] + ".zip")
-        with ZipFile(item_lib_path[:-4] + ".zip", 'r') as zipObj:
-            listOfiles = zipObj.namelist()
-            for element in listOfiles:
-                if element == "classes.jar":
-                    zipObj.extract(element, "./")
-                    os.rename("./classes.jar", item_lib_path[:-4] + ".jar")
-                    dex_path = convertJARtoDEX(item_lib_path[:-4] + ".jar")
-                    dex_paths.append(dex_path)
-    elif item_lib_path[-3:] == "jar":
-        dex_path = convertJARtoDEX(item_lib_path)
-        dex_paths.append(dex_path)
+    try:
+        if item_lib_path[-3:] == "aar":
+            pre, ext = os.path.splitext(item_lib_path)
+            # copying existing aar
+            shutil.copyfile(item_lib_path, item_lib_path[:-4] + "-copy.aar")
+            # converting copied .aar to .zip to extract 'classes.jar' inside of it
+            os.rename(item_lib_path[:-4] + "-copy.aar",
+                      item_lib_path[:-4] + ".zip")
+            with ZipFile(item_lib_path[:-4] + ".zip", 'r') as zipObj:
+                listOfiles = zipObj.namelist()
+                for element in listOfiles:
+                    if element == "classes.jar":
+                        zipObj.extract(element, "./")
+                        os.rename("./classes.jar", item_lib_path[:-4] + ".jar")
+                        dex_path = convertJARtoDEX(item_lib_path[:-4] + ".jar")
+                        dex_paths.append(dex_path)
+        elif item_lib_path[-3:] == "jar":
+            dex_path = convertJARtoDEX(item_lib_path)
+            dex_paths.append(dex_path)
+    except:
+        file_blacklist.write(item_lib_path[:-4] + ".jar\n")
+        file_blacklist.flush()
 
 
 analyzeDEXfiles()
