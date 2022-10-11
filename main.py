@@ -26,10 +26,10 @@ Baslangic dosya formati:
         
 """
 
-lib_path = "libs"
+lib_path = "../libsec-scraper/updated-libs"
 dex_path = "./dex_files"
 blacklist_file_path = "./blacklist.txt"
-metadata_path = "metadata"
+metadata_path = "../libsec-scraper/libdata"
 
 
 writer_permission = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'permission', 'api', 'method'],
