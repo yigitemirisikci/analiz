@@ -26,10 +26,10 @@ Baslangic dosya formati:
         
 """
 
-lib_path = "libs"  # "../libsec-scraper/updated-libs"
+lib_path = "../libsec-scraper/updated-libs"
 dex_path = "./dex_files"
 blacklist_file_path = "./blacklist.txt"
-metadata_path = "metadata"  # "../libsec-scraper/libdata"
+metadata_path = "../libsec-scraper/libdata"
 
 
 writer_permission = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'permission', 'api', 'method'],
@@ -273,7 +273,7 @@ def main() -> None:
             convertJARtoDEX(item_lib_path[:-4] + ".jar", blacklist)
 
         except:
-            blacklist.add(item_lib_path[:-4] + ".jar")
+            blacklist.add(item_lib_path)
 
     analyzeDEXfiles()
 
