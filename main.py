@@ -15,7 +15,7 @@ Baslangic dosya formati:
 
 - lib_path/                                 Bitiste olusan dosyalar:
     -lib1/
-        -lib1+version1.aar  -------------> (lib+version1.aar , lib+version1.zip , lib+version1.jar , lib+version1.dex)
+        -lib1+version1.aar  -------------> (lib+version1.aar , lib+version1.jar , lib+version1.dex)
         -lib1+version2.aar
         -lib1+version3.jar  -------------> (lib1+version3.jar , lib1+version3.dex) 
     -lib2/                                  ...
@@ -263,19 +263,24 @@ def main() -> None:
             if item_lib_path[-3:] == "aar":
                 with ZipFile(item_lib_path, 'r') as zipObj:
                     listOfiles = zipObj.namelist()
-                    for element in listOfiles:
-                        if element == "classes.jar":
-                            zipObj.extract(element, "./")
-                            os.rename("./classes.jar",
-                                      item_lib_path[:-4] + ".jar")
-                            break
+                    if "classes.jar" not in listOfiles:
+                        print('Could not find classes.jar in ' + item_lib_path)
+                        raise Exception()
+
+                    zipObj.extract("classes.jar", "./")
+                    os.rename("./classes.jar", item_lib_path[:-4] + ".jar")
+
+                    print("Extracted classes.jar for " + item_lib_path)
 
             convertJARtoDEX(item_lib_path[:-4] + ".jar", blacklist)
 
         except:
             blacklist.add(item_lib_path)
 
+    print('Finished converting to dex')
+    print('Starting to analyze dex files')
     analyzeDEXfiles()
+    print('All done')
 
 
 if __name__ == '__main__':
