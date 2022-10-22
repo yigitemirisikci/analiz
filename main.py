@@ -9,7 +9,7 @@ from androguard.core.analysis.analysis import Analysis
 import os.path
 import json
 from libmetadata import LibMetadata
-from analysis_tools import AnalysisWriter, JavascriptResult, MethodSignature, Blacklist
+from analysis_tools import AnalysisWriter, JavascriptResult, MethodSignature, Blacklist, get_last_analyzed_library
 
 """
 Baslangic dosya formati:
@@ -298,7 +298,19 @@ def main() -> None:
     if mode in ['all', 'analyze']:
         print('Starting to analyze dex files')
         dex_paths = sorted(get_dex_paths())
-        analyze_dex_files(dex_paths, blacklist)
+
+        starting_index = 0
+        last_library = lib_path + "/" + get_last_analyzed_library()
+        if last_library in dex_paths:
+            index = dex_paths.index(last_library)
+            print("Daha önce yapılmış analiz bulundu!")
+            print(f"Önceki analizde {len(dex_paths)} kütüphaneden en az {index+1} tanesi tamamlanmış ve en son {last_library} analiz edilmiş.")
+            cont = input("Analiz buradan devam etsin mi? [E/H]: ")
+
+            if cont.strip().lower() in ['e', 'evet', 'y', 'yes']:
+                starting_index = index + 1
+
+        analyze_dex_files(dex_paths[starting_index:], blacklist)
         print()
 
     print('All done')

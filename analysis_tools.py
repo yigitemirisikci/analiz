@@ -66,3 +66,23 @@ class Blacklist:
 
     def contains(self, item: str) -> bool:
         return item in self.blacklisted
+
+
+def get_last_analyzed_library_in(path: str) -> str:
+    with open(path, 'r') as file:
+        all_lines = file.readlines()
+        last_elements = sorted(all_lines)[-1].strip().split(',')
+        last_path = last_elements[0] + "/" + last_elements[3] + ".dex"
+
+        return last_path
+
+
+def get_last_analyzed_library() -> str:
+    last_path = ""
+    for path in ['classloader.csv', 'installed_packages.csv', 'javascript.csv', 'permission.csv', 'reflection.csv']:
+        last_path = max(last_path, get_last_analyzed_library_in(path))
+
+    if not last_path:
+        last_path = None
+
+    return last_path
