@@ -4,7 +4,7 @@ import subprocess
 import sys
 from typing import Any, List, Tuple
 from zipfile import ZipFile
-from androguard.misc import AnalyzeDex
+from androguard.misc import AnalyzeDex, get_default_session
 from androguard.core.analysis.analysis import Analysis
 import os.path
 import json
@@ -210,6 +210,7 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
         del analysis_results
         del analysis
         gc.collect()
+        get_default_session().reset()
 
 
 def get_metadata_paths() -> List[str]:
