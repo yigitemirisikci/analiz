@@ -1,0 +1,4 @@
+Ljava/net/URLConnection; java/io/InputStream getInputStream()> -> _BOTH_
+Ljava/net/URL; java/io/InputStream openStream()> -> _BOTH_
+Ljava/net/URL; java/lang/Object getContent()> -> _BOTH_
+Ljava/net/URL; java/lang/Object getContent(java/lang/Class[])> -> _BOTH_

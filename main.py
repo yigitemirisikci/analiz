@@ -27,10 +27,16 @@ Baslangic dosya formati:
 
 """
 
-lib_path = "../libsec-scraper/updated-libs"
+lib_path = "./libs"
 blacklist_file_path = "./blacklist.txt"
 metadata_path = "../libsec-scraper/libdata"
+sources_path = "./sources.txt"
+sinks_path = "./sinks.txt"
+both_path = "./both.txt"
 
+file_sinks = open(sinks_path, "r").readlines()
+file_both = open(both_path, "r").readlines()
+file_sources = open(sources_path, "r").readlines()
 
 writer_permission = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'permission', 'api', 'method'],
                                    "permission.csv")
@@ -42,7 +48,12 @@ writer_reflection = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 
                                    "reflection.csv")
 writer_inspackages = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
                                     "installed_packages.csv")
-
+writer_sources = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+                                    "sources.csv")
+writer_both = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+                                    "both.csv")
+writer_sinks = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+                                    "sinks.csv")
 
 def check_classloader(analysis: Analysis) -> bool:
     return bool(list(analysis.find_methods("Ldalvik/system/DexClassLoader;", "loadClass()"))) or\
@@ -196,6 +207,30 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
         check_signature(analysis, sign_insp5,
                         splitted_path, writer_inspackages)
 
+        for item in file_sources:
+            class_name = item.split(" ")[0]
+            method_name = item.split("(")[0].split(" ")[2]
+            sign_inspc = MethodSignature(
+            class_name, method_name)
+            check_signature(analysis, sign_inspc,
+                        splitted_path, writer_sources)
+
+        for item in file_sinks:
+            class_name = item.split(" ")[0]
+            method_name = item.split("(")[0].split(" ")[2]
+            sign_inspc = MethodSignature(
+            class_name, method_name)
+            check_signature(analysis, sign_inspc,
+                        splitted_path, writer_sinks)
+
+        for item in file_both:
+            class_name = item.split(" ")[0]
+            method_name = item.split("(")[0].split(" ")[2]
+            sign_inspc = MethodSignature(
+            class_name, method_name)
+            check_signature(analysis, sign_inspc,
+                        splitted_path, writer_both)
+
         # dangerous permissions
         check_permissions(analysis, splitted_path)
 
@@ -205,7 +240,7 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
                 javascript_result = check_javascript(analysis)
                 uses_reflection = check_reflection(analysis)
                 uses_pm = check_installed_packages(analysis)
-                """
+        """
 
         del analysis_results
         del analysis
