@@ -27,7 +27,7 @@ Baslangic dosya formati:
 
 """
 
-lib_path = "./libs"
+lib_path = "../libsec-scraper/updated-libs"
 blacklist_file_path = "./blacklist.txt"
 metadata_path = "../libsec-scraper/libdata"
 sources_path = "./sources.txt"
