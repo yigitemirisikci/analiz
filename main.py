@@ -34,26 +34,32 @@ sources_path = "./sources.txt"
 sinks_path = "./sinks.txt"
 both_path = "./both.txt"
 
-file_sinks = open(sinks_path, "r").readlines()
-file_both = open(both_path, "r").readlines()
-file_sources = open(sources_path, "r").readlines()
+#file_sinks = open(sinks_path, "r").readlines()
+#file_both = open(both_path, "r").readlines()
+#file_sources = open(sources_path, "r").readlines()
 
-writer_permission = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'permission', 'api', 'method'],
-                                   "permission.csv")
-writer_classloader = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                    "classloader.csv")
-writer_javascript = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                   "javascript.csv")
-writer_reflection = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                   "reflection.csv")
-writer_inspackages = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                    "installed_packages.csv")
-writer_sources = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                    "sources.csv")
-writer_both = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                    "both.csv")
-writer_sinks = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                    "sinks.csv")
+#writer_permission = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'permission', 'api', 'method'],
+#                                   "permission.csv")
+#writer_classloader = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+#                                    "classloader.csv")
+#writer_javascript = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+#                                   "javascript.csv")
+#writer_reflection = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+#                                   "reflection.csv")
+#writer_inspackages = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+#                                    "installed_packages.csv")
+#writer_sources = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+#                                    "sources.csv")
+#writer_both = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+#                                    "both.csv")
+#writer_sinks = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+#                                    "sinks.csv")
+
+writer_send_sms = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+                                   "send_sms.csv")
+
+writer_send_mms = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+                                   "send_mms.csv")
 
 def check_classloader(analysis: Analysis) -> bool:
     return bool(list(analysis.find_methods("Ldalvik/system/DexClassLoader;", "loadClass()"))) or\
@@ -111,7 +117,7 @@ def check_signature(analysis: Analysis, signature: MethodSignature, splitted_pat
 
         writer.write_signature(splitted_path, signature, meth_list)
 
-
+"""
 def check_permissions(analysis: Analysis, splitted_path: List[str]) -> None:
     for meth, perm in analysis.get_permissions():
         meth_list = []
@@ -120,7 +126,7 @@ def check_permissions(analysis: Analysis, splitted_path: List[str]) -> None:
 
         writer_permission.write_permission(
             splitted_path, perm, meth, meth_list)
-
+"""
 
 def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
     for ind, path in enumerate(dex_paths):
@@ -135,7 +141,7 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
 
         analysis_results: Tuple[Any, Any, Analysis] = AnalyzeDex(path)
         a, b, analysis = analysis_results
-
+        """
         # Javascript
         signature_jsenabled = MethodSignature(
             "Landroid.webkit.WebSettings;", "setJavaScriptEnabled")
@@ -230,9 +236,35 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
             class_name, method_name)
             check_signature(analysis, sign_inspc,
                         splitted_path, writer_both)
-
         # dangerous permissions
         check_permissions(analysis, splitted_path)
+        """
+
+        # Send SMS
+        sign_send_sms1 = MethodSignature(
+            "Landroid/telephony/SmsManager;", "sendDataMessage")
+        sign_send_sms2 = MethodSignature(
+            "Landroid/telephony/SmsManager;", "sendMultipartTextMessage")
+        sign_send_sms3 = MethodSignature(
+            "Landroid/telephony/SmsManager;", "sendTextMessage")
+        sign_send_sms4 = MethodSignature(
+            "Landroid/telephony/SmsManager;", "sendTextMessageWithoutPersisting")
+
+        check_signature(analysis, sign_send_sms1,
+                        splitted_path, writer_send_sms)
+        check_signature(analysis, sign_send_sms2,
+                        splitted_path, writer_send_sms)
+        check_signature(analysis, sign_send_sms3,
+                        splitted_path, writer_send_sms)
+        check_signature(analysis, sign_send_sms4,
+                        splitted_path, writer_send_sms)
+        
+        # Send MMS
+        sign_send_mms = MethodSignature(
+            "Landroid/telephony/SmsManager;", "sendMultimediaMessage")
+        check_signature(analysis, sign_send_mms,
+                        splitted_path, writer_send_mms)
+
 
         # Genel sonuçlar (şimdilik kullanılmadı)
         """
