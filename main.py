@@ -61,6 +61,9 @@ writer_send_sms = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 's
 writer_send_mms = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
                                    "send_mms.csv")
 
+writer_place_phone_call = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+                                   "place_phone_call.csv")
+
 def check_classloader(analysis: Analysis) -> bool:
     return bool(list(analysis.find_methods("Ldalvik/system/DexClassLoader;", "loadClass()"))) or\
         bool(list(analysis.find_methods("Ldalvik/system/PathClassLoader;", "loadClass()"))) or\
@@ -116,6 +119,17 @@ def check_signature(analysis: Analysis, signature: MethodSignature, splitted_pat
             meth_list.append(m.full_name)
 
         writer.write_signature(splitted_path, signature, meth_list)
+
+def check_str(analysis: Analysis, string: str, splitted_path: List[str], writer: AnalysisWriter) -> None:
+    result = analysis.find_strings(string)
+
+    for item in result:
+        meth_list = []
+        for _, m, _ in item.get_xref_from():
+            meth_list.append(m.full_name)
+
+        writer.write_permission(splitted_path, string, m, meth_list)
+
 
 """
 def check_permissions(analysis: Analysis, splitted_path: List[str]) -> None:
@@ -264,6 +278,9 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
             "Landroid/telephony/SmsManager;", "sendMultimediaMessage")
         check_signature(analysis, sign_send_mms,
                         splitted_path, writer_send_mms)
+        
+        # Place phone call
+        check_str(analysis, "android.intent.action.CALL", splitted_path, writer_place_phone_call)
 
 
         # Genel sonuçlar (şimdilik kullanılmadı)
