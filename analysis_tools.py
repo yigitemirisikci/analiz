@@ -41,6 +41,10 @@ class AnalysisWriter:
     def write_permission(self, splitted_path: List[str], perm, meth, meth_list) -> None:
         self.writerow({'id': splitted_path[0] + "+" + splitted_path[1], 'artifact_id': splitted_path[0], 'group_id': splitted_path[1],
                        "version": splitted_path[2][:-4], 'permission': perm, 'api': meth.full_name, 'method': meth_list})
+        
+    def write_str(self, splitted_path: List[str], string, meth_list) -> None:
+        self.writerow({'id': splitted_path[0] + "+" + splitted_path[1], 'artifact_id': splitted_path[0], 'group_id': splitted_path[1],
+                       "version": splitted_path[2][:-4], 'string': string, 'method': meth_list})
 
 
 class Blacklist:
