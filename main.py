@@ -61,7 +61,7 @@ writer_send_sms = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 's
 writer_send_mms = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
                                    "send_mms.csv")
 
-writer_place_phone_call = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+writer_place_phone_call = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'string', 'method'],
                                    "place_phone_call.csv")
 
 def check_classloader(analysis: Analysis) -> bool:
@@ -128,7 +128,7 @@ def check_str(analysis: Analysis, string: str, splitted_path: List[str], writer:
         for _, m in item.get_xref_from():
             meth_list.append(m.full_name)
 
-        writer.write_permission(splitted_path, string, m, meth_list)
+        writer.write_str(splitted_path, string, meth_list)
 
 
 """
