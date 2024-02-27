@@ -125,7 +125,7 @@ def check_str(analysis: Analysis, string: str, splitted_path: List[str], writer:
 
     for item in result:
         meth_list = []
-        for _, m, _ in item.get_xref_from():
+        for _, m in item.get_xref_from():
             meth_list.append(m.full_name)
 
         writer.write_permission(splitted_path, string, m, meth_list)
