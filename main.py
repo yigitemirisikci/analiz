@@ -54,7 +54,7 @@ both_path = "./both.txt"
 #                                    "both.csv")
 #writer_sinks = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
 #                                    "sinks.csv")
-
+"""
 writer_send_sms = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
                                    "send_sms.csv")
 
@@ -63,6 +63,19 @@ writer_send_mms = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 's
 
 writer_place_phone_call = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'string', 'method'],
                                    "place_phone_call.csv")
+"""
+
+writer_calendar = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'string', 'method'],
+                                   "calendar.csv")
+
+writer_location = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+                                   "location.csv")
+
+writer_accounts = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+                                   "accounts.csv")
+
+writer_camera = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+                                   "camera.csv")
 
 def check_classloader(analysis: Analysis) -> bool:
     return bool(list(analysis.find_methods("Ldalvik/system/DexClassLoader;", "loadClass()"))) or\
@@ -252,7 +265,6 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
                         splitted_path, writer_both)
         # dangerous permissions
         check_permissions(analysis, splitted_path)
-        """
 
         # Send SMS
         sign_send_sms1 = MethodSignature(
@@ -281,7 +293,63 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
         
         # Place phone call
         check_str(analysis, "android.intent.action.CALL", splitted_path, writer_place_phone_call)
+        """
 
+        # Calendar
+        signatures_calendar = [
+            'android.provider.CalendarContract.CONTENT_URI',
+            'android.provider.CalendarContract.Attendees.CONTENT_URI',
+            'android.provider.CalendarContract.CalendarAlerts.CONTENT_URI',
+            'android.provider.CalendarContract.CalendarCache.URI',
+            'android.provider.CalendarContract.CalendarEntity.CONTENT_URI',
+            'android.provider.CalendarContract.Calendars.CONTENT_URI',
+            'android.provider.CalendarContract.Colors.CONTENT_URI',
+            'android.provider.CalendarContract.EventDays.CONTENT_URI',
+            'android.provider.CalendarContract.Events.CONTENT_URI',
+            'android.provider.CalendarContract.EventsEntity.CONTENT_URI',
+            'android.provider.CalendarContract.ExtendedProperties.CONTENT_URI',
+            'android.provider.CalendarContract.Instances.CONTENT_URI',
+            'android.provider.CalendarContract.Reminders.CONTENT_URI',
+            'android.provider.CalendarContract.SyncState.CONTENT_URI' 
+        ]
+
+        for sig in signatures_calendar:
+            check_str(analysis, sig, splitted_path, writer_calendar)
+
+        # Location
+        signatures_location = [
+            MethodSignature("Lcom/google/android/gms/location/FusedLocationProviderClient;", "getLastLocation"),
+            MethodSignature("Lcom/google/android/gms/location/FusedLocationProviderClient;", "getCurrentLocation"),
+            MethodSignature("Lcom/google/android/gms/location/FusedLocationProviderClient;", "requestLocationUpdates"),
+            MethodSignature("Landroid/location/LocationManager;", "getCurrentLocation"),
+            MethodSignature("Landroid/location/LocationManager;", "getLastKnownLocation"),
+            MethodSignature("Landroid/location/LocationManager;", "requestLocationUpdates"),
+            MethodSignature("Landroid/location/LocationManager;", "requestSingleUpdate")
+        ]
+        
+        for sig in signatures_location:
+            check_signature(analysis, sig, splitted_path, writer_location)
+
+        # Accounts
+        signatures_account = [
+            MethodSignature("Landroid.accounts.AccountManager;", "getAccounts"),
+            MethodSignature("Landroid.accounts.AccountManager;", "getAccountsByType"),
+            MethodSignature("Landroid.accounts.AccountManager;", "getAccountsByTypeAndFeatures"),
+            MethodSignature("Landroid.accounts.AccountManager;", "getAccountsByTypeForPackage")
+        ]
+
+        for sig in signatures_account:
+            check_signature(analysis, sig, splitted_path, writer_accounts)
+
+        # Camera
+        signatures_camera = [
+            MethodSignature("Landroid/hardware/Camera;", ".*"),
+            MethodSignature("Landroid/hardware/camera2/.*;", ".*"),
+            MethodSignature("Landroidx/camera/.*;", ".*")
+        ]
+
+        for sig in signatures_camera:
+            check_signature(analysis, sig, splitted_path, writer_camera)
 
         # Genel sonuçlar (şimdilik kullanılmadı)
         """
