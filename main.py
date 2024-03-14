@@ -2,14 +2,14 @@ import gc
 import os
 import subprocess
 import sys
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Dict
 from zipfile import ZipFile
 from androguard.misc import AnalyzeDex, get_default_session
 from androguard.core.analysis.analysis import Analysis
 import os.path
 import json
 from libmetadata import LibMetadata
-from analysis_tools import AnalysisWriter, JavascriptResult, MethodSignature, Blacklist, get_last_analyzed_library
+from analysis_tools import AnalysisWriter, JavascriptResult, MethodSignature, Blacklist, get_last_analyzed_library, FieldSignature
 
 """
 Baslangic dosya formati:
@@ -38,44 +38,9 @@ both_path = "./both.txt"
 #file_both = open(both_path, "r").readlines()
 #file_sources = open(sources_path, "r").readlines()
 
-#writer_permission = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'permission', 'api', 'method'],
-#                                   "permission.csv")
-#writer_classloader = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-#                                    "classloader.csv")
-#writer_javascript = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-#                                   "javascript.csv")
-#writer_reflection = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-#                                   "reflection.csv")
-#writer_inspackages = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-#                                    "installed_packages.csv")
-#writer_sources = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-#                                    "sources.csv")
-#writer_both = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-#                                    "both.csv")
-#writer_sinks = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-#                                    "sinks.csv")
-"""
-writer_send_sms = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                   "send_sms.csv")
-
-writer_send_mms = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                   "send_mms.csv")
-
-writer_place_phone_call = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'string', 'method'],
-                                   "place_phone_call.csv")
-"""
-
-writer_calendar = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'string', 'method'],
-                                   "calendar.csv")
-
-writer_location = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                   "location.csv")
-
-writer_accounts = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                   "accounts.csv")
-
-writer_camera = AnalysisWriter(['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
-                                   "camera.csv")
+writers: Dict[str, AnalysisWriter] = {
+    "calendar": AnalysisWriter.from_type("string", "calendar")
+}
 
 def check_classloader(analysis: Analysis) -> bool:
     return bool(list(analysis.find_methods("Ldalvik/system/DexClassLoader;", "loadClass()"))) or\
@@ -143,6 +108,15 @@ def check_str(analysis: Analysis, string: str, splitted_path: List[str], writer:
 
         writer.write_str(splitted_path, string, meth_list)
 
+def check_field(analysis: Analysis, field_signature: FieldSignature, splitted_path: List[str], writer: AnalysisWriter) -> None:
+    result = analysis.find_fields(classname=field_signature.classname, fieldname=field_signature.fieldname)
+
+    for item in result:
+        meth_list = []
+        for cls, meth in item.get_xref_read():
+            meth_list.append(meth.full_name)
+
+        writer.write_field(splitted_path, field_signature, meth_list)
 
 """
 def check_permissions(analysis: Analysis, splitted_path: List[str]) -> None:
@@ -293,28 +267,6 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
         
         # Place phone call
         check_str(analysis, "android.intent.action.CALL", splitted_path, writer_place_phone_call)
-        """
-
-        # Calendar
-        signatures_calendar = [
-            'android.provider.CalendarContract.CONTENT_URI',
-            'android.provider.CalendarContract.Attendees.CONTENT_URI',
-            'android.provider.CalendarContract.CalendarAlerts.CONTENT_URI',
-            'android.provider.CalendarContract.CalendarCache.URI',
-            'android.provider.CalendarContract.CalendarEntity.CONTENT_URI',
-            'android.provider.CalendarContract.Calendars.CONTENT_URI',
-            'android.provider.CalendarContract.Colors.CONTENT_URI',
-            'android.provider.CalendarContract.EventDays.CONTENT_URI',
-            'android.provider.CalendarContract.Events.CONTENT_URI',
-            'android.provider.CalendarContract.EventsEntity.CONTENT_URI',
-            'android.provider.CalendarContract.ExtendedProperties.CONTENT_URI',
-            'android.provider.CalendarContract.Instances.CONTENT_URI',
-            'android.provider.CalendarContract.Reminders.CONTENT_URI',
-            'android.provider.CalendarContract.SyncState.CONTENT_URI' 
-        ]
-
-        for sig in signatures_calendar:
-            check_str(analysis, sig, splitted_path, writer_calendar)
 
         # Location
         signatures_location = [
@@ -350,6 +302,30 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
 
         for sig in signatures_camera:
             check_signature(analysis, sig, splitted_path, writer_camera)
+        """
+        
+        # Calendar
+        signatures_calendar = [
+            'android.provider.CalendarContract.CONTENT_URI',
+            'android.provider.CalendarContract.Attendees.CONTENT_URI',
+            'android.provider.CalendarContract.CalendarAlerts.CONTENT_URI',
+            'android.provider.CalendarContract.CalendarCache.URI',
+            'android.provider.CalendarContract.CalendarEntity.CONTENT_URI',
+            'android.provider.CalendarContract.Calendars.CONTENT_URI',
+            'android.provider.CalendarContract.Colors.CONTENT_URI',
+            'android.provider.CalendarContract.EventDays.CONTENT_URI',
+            'android.provider.CalendarContract.Events.CONTENT_URI',
+            'android.provider.CalendarContract.EventsEntity.CONTENT_URI',
+            'android.provider.CalendarContract.ExtendedProperties.CONTENT_URI',
+            'android.provider.CalendarContract.Instances.CONTENT_URI',
+            'android.provider.CalendarContract.Reminders.CONTENT_URI',
+            'android.provider.CalendarContract.SyncState.CONTENT_URI' 
+        ]
+
+        for sig in signatures_calendar:
+            fsig = FieldSignature(*sig.rsplit('.', 1))
+            check_field(analysis, fsig, splitted_path, writers["calendar"])
+
 
         # Genel sonuçlar (şimdilik kullanılmadı)
         """
