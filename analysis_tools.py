@@ -16,6 +16,11 @@ class MethodSignature:
     classname: str
     methodname: str
 
+@dataclass(frozen=True)
+class FieldSignature:
+    classname: str
+    fieldname: str
+
 
 class AnalysisWriter:
     def __init__(self, headers: List[str], path: str) -> None:
@@ -27,6 +32,17 @@ class AnalysisWriter:
             with open(self.path, "w") as file:
                 DictWriter(file, delimiter=",", lineterminator="\n",
                            fieldnames=headers).writeheader()
+
+    @classmethod
+    def from_type(cls, type: str, name: str):
+        headers = {
+            "method": ['id', 'artifact_id', 'group_id', 'version', 'signature', 'method'],
+            "permission": ['id', 'artifact_id', 'group_id', 'version', 'permission', 'api', 'method'],
+            "string": ['id', 'artifact_id', 'group_id', 'version', 'string', 'method'],
+            "field": ['id', 'artifact_id', 'group_id', 'version', 'field', 'method'],
+        }[type]
+        path = name + ".csv"
+        return cls(headers, path)
 
     def writerow(self, rowdict: Mapping[str, Any]) -> None:
         with open(self.path, 'a') as file:
@@ -45,6 +61,10 @@ class AnalysisWriter:
     def write_str(self, splitted_path: List[str], string, meth_list) -> None:
         self.writerow({'id': splitted_path[0] + "+" + splitted_path[1], 'artifact_id': splitted_path[0], 'group_id': splitted_path[1],
                        "version": splitted_path[2][:-4], 'string': string, 'method': meth_list})
+
+    def write_field(self, splitted_path: List[str], signature: FieldSignature, meth_list: List[str]) -> None:
+        self.writerow({'id': splitted_path[0] + "+" + splitted_path[1], 'artifact_id': splitted_path[0], 'group_id': splitted_path[1],
+                       "version": splitted_path[2][:-4], 'field': f"{signature.classname}->{signature.fieldname}", 'method': meth_list})
 
 
 class Blacklist:
