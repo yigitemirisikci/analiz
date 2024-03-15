@@ -39,7 +39,7 @@ both_path = "./both.txt"
 #file_sources = open(sources_path, "r").readlines()
 
 writers: Dict[str, AnalysisWriter] = {
-    "calendar": AnalysisWriter.from_type("string", "calendar")
+    "camera": AnalysisWriter.from_type("method", "camera")
 }
 
 def check_classloader(analysis: Analysis) -> bool:
@@ -96,7 +96,7 @@ def check_signature(analysis: Analysis, signature: MethodSignature, splitted_pat
         for _, m, _ in item.get_xref_from():
             meth_list.append(m.full_name)
 
-        writer.write_signature(splitted_path, signature, meth_list)
+        writer.write_signature(splitted_path, MethodSignature(item.class_name, item.name), meth_list)
 
 def check_str(analysis: Analysis, string: str, splitted_path: List[str], writer: AnalysisWriter) -> None:
     result = analysis.find_strings(string)
@@ -142,156 +142,6 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
 
         analysis_results: Tuple[Any, Any, Analysis] = AnalyzeDex(path)
         a, b, analysis = analysis_results
-        """
-        # Javascript
-        signature_jsenabled = MethodSignature(
-            "Landroid.webkit.WebSettings;", "setJavaScriptEnabled")
-        signature_jsinterface = MethodSignature(
-            "Landroid.webkit.WebView;", "addJavascriptInterface")
-        signature_jseval = MethodSignature(
-            "Landroid.webkit.WebView;", "evaluateJavascript"
-        )
-
-        check_signature(analysis, signature_jsenabled,
-                        splitted_path, writer_javascript)
-        check_signature(analysis, signature_jsinterface,
-                        splitted_path, writer_javascript)
-        check_signature(analysis, signature_jseval,
-                        splitted_path, writer_javascript)
-
-        # Class loader
-        sign_cloader1 = MethodSignature(
-            "Ldalvik/system/DexClassLoader;", "loadClass()")
-        sign_cloader2 = MethodSignature(
-            "Ldalvik/system/PathClassLoader;", "loadClass()")
-        sign_cloader3 = MethodSignature(
-            "Ljava/net/URLClassLoader;", "loadClass()")
-        sign_cloader4 = MethodSignature(
-            "Ldalvik/system/DelegateLastClassLoader;", "loadClass()")
-        sign_cloader5 = MethodSignature(
-            "Ldalvik/system/InMemoryDexClassLoader;", "loadClass()")
-
-        check_signature(analysis, sign_cloader1,
-                        splitted_path, writer_classloader)
-        check_signature(analysis, sign_cloader2,
-                        splitted_path, writer_classloader)
-        check_signature(analysis, sign_cloader3,
-                        splitted_path, writer_classloader)
-        check_signature(analysis, sign_cloader4,
-                        splitted_path, writer_classloader)
-        check_signature(analysis, sign_cloader5,
-                        splitted_path, writer_classloader)
-
-        # Reflection
-        sign_ref1 = MethodSignature("Ljava/lang/reflect/", "")
-        sign_ref2 = MethodSignature("Lkotlin/reflect/", "")
-
-        check_signature(analysis, sign_ref1,
-                        splitted_path, writer_reflection)
-        check_signature(analysis, sign_ref2,
-                        splitted_path, writer_reflection)
-
-        # Installed packages
-        sign_insp1 = MethodSignature(
-            "Landroid/content/pm/PackageManager;", "getInstallSourceInfo")
-        sign_insp2 = MethodSignature(
-            "Landroid/content/pm/PackageManager;", "getInstalledApplications")
-        sign_insp3 = MethodSignature(
-            "Landroid/content/pm/PackageManager;", "getInstalledPackages")
-        sign_insp4 = MethodSignature(
-            "Landroid/content/pm/PackageManager;", "getPackageInfo")
-        sign_insp5 = MethodSignature(
-            "Landroid/content/pm/PackageManager;", "getApplicationInfo")
-
-        check_signature(analysis, sign_insp1,
-                        splitted_path, writer_inspackages)
-        check_signature(analysis, sign_insp2,
-                        splitted_path, writer_inspackages)
-        check_signature(analysis, sign_insp3,
-                        splitted_path, writer_inspackages)
-        check_signature(analysis, sign_insp4,
-                        splitted_path, writer_inspackages)
-        check_signature(analysis, sign_insp5,
-                        splitted_path, writer_inspackages)
-
-        for item in file_sources:
-            class_name = item.split(" ")[0]
-            method_name = item.split("(")[0].split(" ")[2]
-            sign_inspc = MethodSignature(
-            class_name, method_name)
-            check_signature(analysis, sign_inspc,
-                        splitted_path, writer_sources)
-
-        for item in file_sinks:
-            class_name = item.split(" ")[0]
-            method_name = item.split("(")[0].split(" ")[2]
-            sign_inspc = MethodSignature(
-            class_name, method_name)
-            check_signature(analysis, sign_inspc,
-                        splitted_path, writer_sinks)
-
-        for item in file_both:
-            class_name = item.split(" ")[0]
-            method_name = item.split("(")[0].split(" ")[2]
-            sign_inspc = MethodSignature(
-            class_name, method_name)
-            check_signature(analysis, sign_inspc,
-                        splitted_path, writer_both)
-        # dangerous permissions
-        check_permissions(analysis, splitted_path)
-
-        # Send SMS
-        sign_send_sms1 = MethodSignature(
-            "Landroid/telephony/SmsManager;", "sendDataMessage")
-        sign_send_sms2 = MethodSignature(
-            "Landroid/telephony/SmsManager;", "sendMultipartTextMessage")
-        sign_send_sms3 = MethodSignature(
-            "Landroid/telephony/SmsManager;", "sendTextMessage")
-        sign_send_sms4 = MethodSignature(
-            "Landroid/telephony/SmsManager;", "sendTextMessageWithoutPersisting")
-
-        check_signature(analysis, sign_send_sms1,
-                        splitted_path, writer_send_sms)
-        check_signature(analysis, sign_send_sms2,
-                        splitted_path, writer_send_sms)
-        check_signature(analysis, sign_send_sms3,
-                        splitted_path, writer_send_sms)
-        check_signature(analysis, sign_send_sms4,
-                        splitted_path, writer_send_sms)
-        
-        # Send MMS
-        sign_send_mms = MethodSignature(
-            "Landroid/telephony/SmsManager;", "sendMultimediaMessage")
-        check_signature(analysis, sign_send_mms,
-                        splitted_path, writer_send_mms)
-        
-        # Place phone call
-        check_str(analysis, "android.intent.action.CALL", splitted_path, writer_place_phone_call)
-
-        # Location
-        signatures_location = [
-            MethodSignature("Lcom/google/android/gms/location/FusedLocationProviderClient;", "getLastLocation"),
-            MethodSignature("Lcom/google/android/gms/location/FusedLocationProviderClient;", "getCurrentLocation"),
-            MethodSignature("Lcom/google/android/gms/location/FusedLocationProviderClient;", "requestLocationUpdates"),
-            MethodSignature("Landroid/location/LocationManager;", "getCurrentLocation"),
-            MethodSignature("Landroid/location/LocationManager;", "getLastKnownLocation"),
-            MethodSignature("Landroid/location/LocationManager;", "requestLocationUpdates"),
-            MethodSignature("Landroid/location/LocationManager;", "requestSingleUpdate")
-        ]
-        
-        for sig in signatures_location:
-            check_signature(analysis, sig, splitted_path, writer_location)
-
-        # Accounts
-        signatures_account = [
-            MethodSignature("Landroid.accounts.AccountManager;", "getAccounts"),
-            MethodSignature("Landroid.accounts.AccountManager;", "getAccountsByType"),
-            MethodSignature("Landroid.accounts.AccountManager;", "getAccountsByTypeAndFeatures"),
-            MethodSignature("Landroid.accounts.AccountManager;", "getAccountsByTypeForPackage")
-        ]
-
-        for sig in signatures_account:
-            check_signature(analysis, sig, splitted_path, writer_accounts)
 
         # Camera
         signatures_camera = [
@@ -301,30 +151,7 @@ def analyze_dex_files(dex_paths: List[str], blacklist: Blacklist):
         ]
 
         for sig in signatures_camera:
-            check_signature(analysis, sig, splitted_path, writer_camera)
-        """
-        
-        # Calendar
-        signatures_calendar = [
-            'android.provider.CalendarContract.CONTENT_URI',
-            'android.provider.CalendarContract.Attendees.CONTENT_URI',
-            'android.provider.CalendarContract.CalendarAlerts.CONTENT_URI',
-            'android.provider.CalendarContract.CalendarCache.URI',
-            'android.provider.CalendarContract.CalendarEntity.CONTENT_URI',
-            'android.provider.CalendarContract.Calendars.CONTENT_URI',
-            'android.provider.CalendarContract.Colors.CONTENT_URI',
-            'android.provider.CalendarContract.EventDays.CONTENT_URI',
-            'android.provider.CalendarContract.Events.CONTENT_URI',
-            'android.provider.CalendarContract.EventsEntity.CONTENT_URI',
-            'android.provider.CalendarContract.ExtendedProperties.CONTENT_URI',
-            'android.provider.CalendarContract.Instances.CONTENT_URI',
-            'android.provider.CalendarContract.Reminders.CONTENT_URI',
-            'android.provider.CalendarContract.SyncState.CONTENT_URI' 
-        ]
-
-        for sig in signatures_calendar:
-            fsig = FieldSignature(*sig.rsplit('.', 1))
-            check_field(analysis, fsig, splitted_path, writers["calendar"])
+            check_signature(analysis, sig, splitted_path, writers["camera"])
 
 
         # Genel sonuçlar (şimdilik kullanılmadı)
@@ -353,10 +180,24 @@ def get_metadata_paths() -> List[str]:
 
 def get_dex_paths() -> List[str]:
     dex_path_list: List[str] = []
+
+    dex_paths_file = "./dex_paths.txt"
+    if os.path.exists(dex_paths_file) and os.path.getsize(dex_paths_file) > 0:
+        with open(dex_paths_file, mode="r") as file:
+            for line in file:
+                dex_path_list.append(line.strip())
+        return sorted(dex_path_list)
+
     for root, _, files in os.walk(lib_path):
         for file in files:
             if file[-4:] == '.dex':
                 dex_path_list.append(root + "/" + file)
+
+    dex_path_list.sort()
+
+    with open(dex_paths_file, mode="w") as file:
+        for item in dex_path_list:
+            file.write(item + "\n")
 
     return dex_path_list
 
@@ -413,23 +254,24 @@ def unpack_and_convert(lib_paths: List[str], blacklist: Blacklist):
 
 def main() -> None:
     blacklist = Blacklist(blacklist_file_path)
-    metadata_paths = sorted(get_metadata_paths())
-    lib_paths = get_lib_paths(metadata_paths)
 
     mode = sys.argv[1] if len(sys.argv) > 1 else 'all'
+    clean_start = sys.argv[2] == "clean" if len(sys.argv) > 2 else None
 
     if mode in ['all', 'dex']:
         print('Starting to convert aar/jar files to dex')
+        metadata_paths = sorted(get_metadata_paths())
+        lib_paths = get_lib_paths(metadata_paths)
         unpack_and_convert(lib_paths, blacklist)
         print('Finished converting to dex')
 
     if mode in ['all', 'analyze']:
         print('Starting to analyze dex files')
-        dex_paths = sorted(get_dex_paths())
+        dex_paths = get_dex_paths()
 
         starting_index = 0
         last_library = lib_path + "/" + get_last_analyzed_library()
-        if last_library in dex_paths:
+        if not clean_start and last_library in dex_paths:
             index = dex_paths.index(last_library)
             print("Daha önce yapılmış analiz bulundu!")
             print(f"Önceki analizde {len(dex_paths)} kütüphaneden en az {index+1} tanesi tamamlanmış ve en son {last_library} analiz edilmiş.")
