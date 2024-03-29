@@ -1,0 +1,9 @@
+id,artifact_id,group_id,version,string,method
+com.paozhuanyinyu+permission,com.paozhuanyinyu,permission,1.0.0,content://com.android.calendar/,<com.paozhuanyinyu.runtime.permission.manufacturer.PermissionsChecker: boolean checkReadCalendar(android.content.Context)>
+com.paozhuanyinyu+permission,com.paozhuanyinyu,permission,1.0.1,content://com.android.calendar/,<com.paozhuanyinyu.runtime.permission.manufacturer.PermissionsChecker: boolean checkReadCalendar(android.content.Context)>
+com.tapjoy+tapjoy-android-sdk,com.tapjoy,tapjoy-android-sdk,11.6.0,content://com.android.calendar/,"<com.tapjoy.mraid.controller.Utility: void createEvent(java.lang.String,java.lang.String,java.lang.String)>"
+com.tapjoy+tapjoy-android-sdk,com.tapjoy,tapjoy-android-sdk,11.6.0,content://com.android.calendar/,"<com.tapjoy.mraid.controller.Utility: void a(int,java.lang.String,java.lang.String,java.lang.String)>"
+com.tapjoy+tapjoy-android-sdk,com.tapjoy,tapjoy-android-sdk,11.6.0,content://com.android.calendar/,"<com.tapjoy.mraid.controller.Utility: void a(int,java.lang.String,java.lang.String,java.lang.String)>"
+com.tapjoy+tapjoy-android-sdk,com.tapjoy,tapjoy-android-sdk,unspecified,content://com.android.calendar/,"<com.tapjoy.mraid.controller.Utility: void createEvent(java.lang.String,java.lang.String,java.lang.String)>"
+com.tapjoy+tapjoy-android-sdk,com.tapjoy,tapjoy-android-sdk,unspecified,content://com.android.calendar/,"<com.tapjoy.mraid.controller.Utility: void a(int,java.lang.String,java.lang.String,java.lang.String)>"
+com.tapjoy+tapjoy-android-sdk,com.tapjoy,tapjoy-android-sdk,unspecified,content://com.android.calendar/,"<com.tapjoy.mraid.controller.Utility: void a(int,java.lang.String,java.lang.String,java.lang.String)>"
